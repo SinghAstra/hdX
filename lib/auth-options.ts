@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
+import { sendVerificationRequest } from "./email";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -37,21 +38,66 @@ export const authOptions: NextAuthOptions = {
     EmailProvider({
       server: {
         host: EMAIL_SERVER_HOST,
-        port: EMAIL_SERVER_PORT,
+        port: Number.parseInt(EMAIL_SERVER_PORT),
         auth: {
           user: EMAIL_SERVER_USER,
           pass: EMAIL_SERVER_PASSWORD,
         },
       },
       from: EMAIL_FROM,
+      sendVerificationRequest,
+      generateVerificationToken: () => {
+        return (
+          Math.random().toString(36).substring(2, 15) +
+          Math.random().toString(36).substring(2, 15)
+        );
+      },
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      if (token.sub) {
-        session.user.id = token.sub;
+    async signIn({ user, account }) {
+      try {
+        console.log("🔐 Sign in attempt:", {
+          provider: account?.provider,
+          email: user.email,
+          userId: user.id,
+        });
+
+        if (account?.provider === "google") {
+          console.log("✅ Google sign-in successful for:", user.email);
+        } else if (account?.provider === "email") {
+          console.log("✅ Email verification successful for:", user.email);
+        }
+
+        return true;
+      } catch (error) {
+        console.log("❌ Sign in error.");
+        if (error instanceof Error) {
+          console.log("error.stack is ", error.stack);
+          console.log("error.message is ", error.message);
+        }
+        return false;
       }
-      return session;
+    },
+    async session({ session, token }) {
+      try {
+        if (token.sub) {
+          session.user.id = token.sub;
+        }
+        if (token.email) {
+          session.user.email = token.email;
+        }
+
+        console.log("📋 Session created for user:", session.user.id);
+        return session;
+      } catch (error) {
+        console.log("❌ Session callback error.");
+        if (error instanceof Error) {
+          console.log("error.stack is ", error.stack);
+          console.log("error.message is ", error.message);
+        }
+        return session;
+      }
     },
     async jwt({ token, user }) {
       if (user) {
