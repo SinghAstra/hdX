@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default function VerifyRequestPage() {
+function EmailSent() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -51,3 +51,5 @@ export default function VerifyRequestPage() {
     </div>
   );
 }
+
+export default EmailSent;
