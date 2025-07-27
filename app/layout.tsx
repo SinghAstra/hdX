@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import type React from "react";
 import "./globals.css";
 
+const inter = Inter({ subsets: ["latin"] });
+
 export const metadata: Metadata = {
-  title: "Explore CI CD",
-  description: "Figuring out CI CD Tools",
-  icons: {
-    icon: "/favicon.ico",
-  },
+  title: "Note Taking App",
+  description: "A simple and elegant note-taking application",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
