@@ -24,7 +24,7 @@ function HomePage() {
       </p>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-        <Link href="/signup">
+        <Link href="/sign-up">
           <Button size="lg" className="w-full sm:w-auto">
             Get Started Free
             <ArrowRight className="ml-2 h-5 w-5" />

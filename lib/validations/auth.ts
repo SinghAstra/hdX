@@ -1,47 +1,19 @@
-import { z } from "zod";
+import * as yup from "yup";
 
-export const emailSchema = z.object({
-  email: z
+export const signUpSchema = yup.object({
+  name: yup.string().required("Name is required"),
+  dob: yup
+    .date()
+    .required("Date of Birth is required")
+    .typeError("Date of Birth is required"),
+  email: yup
     .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address")
-    .max(255, "Email is too long")
-    .toLowerCase()
-    .trim(),
+    .email("Invalid email address")
+    .required("Email is required"),
 });
 
-export const otpSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  token: z
-    .string()
-    .min(6, "Verification code must be 6 characters")
-    .max(6, "Verification code must be 6 characters")
-    .regex(
-      /^[A-Z0-9]{6}$/,
-      "Verification code must contain only letters and numbers"
-    )
-    .transform((val) => val.toUpperCase()), // Always convert to uppercase
-});
-
-export const authSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  token: z.string().optional(),
-  step: z.enum(["email", "verification"]).default("email"),
-});
-
-export type EmailFormData = z.infer<typeof emailSchema>;
-export type OtpFormData = z.infer<typeof otpSchema>;
-export type AuthFormData = z.infer<typeof authSchema>;
-
-export const validateEmail = (email: string): boolean => {
-  try {
-    emailSchema.parse({ email });
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-export const validateOtp = (token: string): boolean => {
-  return token.length >= 6 && token.length <= 255;
+export type SignUpFormData = {
+  name: string;
+  dob: Date | undefined;
+  email: string;
 };
