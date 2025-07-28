@@ -11,12 +11,16 @@ export const emailSchema = z.object({
 });
 
 export const otpSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email("Please enter a valid email address"),
   token: z
     .string()
-    .min(1, "Verification code is required")
-    .max(255, "Verification code is too long")
-    .trim(),
+    .min(6, "Verification code must be 6 characters")
+    .max(6, "Verification code must be 6 characters")
+    .regex(
+      /^[A-Z0-9]{6}$/,
+      "Verification code must contain only letters and numbers"
+    )
+    .transform((val) => val.toUpperCase()), // Always convert to uppercase
 });
 
 export const authSchema = z.object({

@@ -1,14 +1,8 @@
-import { siteConfig } from "@/config/site";
 import { createTransport } from "nodemailer";
-
-const EMAIL_SERVER_PORT = process.env.EMAIL_SERVER_PORT;
-if (!EMAIL_SERVER_PORT) {
-  throw new Error("Email Server Port is required");
-}
 
 const transporter = createTransport({
   host: process.env.EMAIL_SERVER_HOST,
-  port: Number.parseInt(EMAIL_SERVER_PORT),
+  port: Number.parseInt(process.env.EMAIL_SERVER_PORT || "587"),
   secure: true,
   auth: {
     user: process.env.EMAIL_SERVER_USER,
@@ -16,26 +10,9 @@ const transporter = createTransport({
   },
 });
 
-export async function sendVerificationRequest({
-  identifier: email,
-  url,
-  provider,
-}: {
-  identifier: string;
-  url: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  provider: { server: any; from: string };
-}) {
+export async function sendOtpEmail(email: string, otpCode: string) {
   try {
-    const urlObj = new URL(url);
-    const token = urlObj.searchParams.get("token");
-    console.log("email is ", email);
-    console.log("url is ", url);
-    console.log("urlObj.searchParams is ", urlObj.searchParams);
-    console.log("token is ", token);
-
-    const otpCode = token ? token.slice(-6).toUpperCase() : "VERIFY";
-    console.log("otpCode is ", otpCode);
+    console.log(`📧 Sending OTP email to: ${email} with code: ${otpCode}`);
 
     const html = `
       <!DOCTYPE html>
@@ -43,56 +20,56 @@ export async function sendVerificationRequest({
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Verify Your Email - Notes App</title>
+          <title>Your Verification Code - Notes App</title>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">Notes App</h1>
-            <p style="color: #f0f0f0; margin: 10px 0 0 0;">Secure Email Verification</p>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px; font-weight: bold;">Notes App</h1>
+            <p style="color: #f0f0f0; margin: 10px 0 0 0; font-size: 16px;">Email Verification</p>
           </div>
           
-          <div style="background: #ffffff; padding: 40px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <h2 style="color: #333; margin-bottom: 20px;">Verify Your Email Address</h2>
-            <p style="margin-bottom: 30px; font-size: 16px;">
-              Hello! We received a request to sign in to your ${siteConfig.name} account using this email address.
+          <!-- Main Content -->
+          <div style="background: #ffffff; padding: 40px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #333; margin-bottom: 20px; text-align: center; font-size: 24px;">Your Verification Code</h2>
+            <p style="margin-bottom: 30px; font-size: 16px; text-align: center; color: #666;">
+              Enter this code on the Notes App sign-in page to complete your verification:
             </p>
             
-            <div style="background: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px; padding: 30px; text-align: center; margin: 30px 0;">
-              <p style="margin: 0 0 15px 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Your Verification Code</p>
-              <div style="font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+            <!-- OTP Code Display -->
+            <div style="background: linear-gradient(135deg, #f8f9ff 0%, #e3f2fd 100%); border: 3px solid #667eea; border-radius: 16px; padding: 40px; text-align: center; margin: 30px 0; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);">
+              <p style="margin: 0 0 10px 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Verification Code</p>
+              <div style="font-size: 42px; font-weight: bold; color: #667eea; letter-spacing: 12px; font-family: 'Courier New', monospace; margin: 10px 0;">
                 ${otpCode}
               </div>
-              <p style="margin: 15px 0 0 0; font-size: 12px; color: #999;">This code expires in 24 hours</p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #999;">This code expires in 10 minutes</p>
             </div>
             
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${url}" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                        color: white; 
-                        padding: 15px 30px; 
-                        text-decoration: none; 
-                        border-radius: 25px; 
-                        font-weight: bold; 
-                        display: inline-block; 
-                        transition: transform 0.2s;">
-                Verify Email Address
-              </a>
+            <!-- Instructions -->
+            <div style="background: #e8f5e8; border-left: 4px solid #4caf50; border-radius: 8px; padding: 20px; margin: 30px 0;">
+              <h3 style="color: #2e7d32; margin: 0 0 15px 0; font-size: 18px; font-weight: 600;">📋 How to use this code:</h3>
+              <ol style="color: #2e7d32; margin: 0; padding-left: 20px; font-size: 15px; line-height: 1.6;">
+                <li>Return to the Notes App sign-in page</li>
+                <li>Enter this 6-digit code in the verification field</li>
+                <li>Click "Verify and sign in" to complete the process</li>
+              </ol>
             </div>
             
-            <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
-              <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
-                <strong>Security Notice:</strong>
-              </p>
-              <ul style="font-size: 14px; color: #666; padding-left: 20px;">
-                <li>This verification link will expire in 24 hours</li>
-                <li>If you didn't request this, please ignore this email</li>
+            <!-- Security Notice -->
+            <div style="border-top: 2px solid #f0f0f0; padding-top: 25px; margin-top: 30px;">
+              <h4 style="color: #d32f2f; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">🔒 Security Notice:</h4>
+              <ul style="color: #666; padding-left: 20px; margin: 0; font-size: 14px; line-height: 1.6;">
+                <li>This code will expire in 10 minutes for your security</li>
                 <li>Never share this code with anyone</li>
+                <li>If you didn't request this code, please ignore this email</li>
               </ul>
             </div>
             
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="font-size: 12px; color: #999;">
-                This email was sent from Notes App. If you have questions, please contact our support team.
+            <!-- Footer -->
+            <div style="text-align: center; margin-top: 40px; padding-top: 25px; border-top: 2px solid #f0f0f0;">
+              <p style="font-size: 13px; color: #999; margin: 0;">
+                This email was sent from Notes App.<br>
+                If you have questions, please contact our support team.
               </p>
             </div>
           </div>
@@ -101,38 +78,37 @@ export async function sendVerificationRequest({
     `;
 
     const text = `
-      ${siteConfig.name} - Email Verification
-      
-      Hello! We received a request to sign in to your ${siteConfig.name} account.
+      Notes App - Verification Code
       
       Your verification code is: ${otpCode}
       
-      Or click this link to verify: ${url}
+      How to use this code:
+      1. Return to the Notes App sign-in page
+      2. Enter this 6-digit code in the verification field
+      3. Click "Verify and sign in" to complete the process
       
-      This link expires in 24 hours.
+      This code expires in 10 minutes.
       
-      If you didn't request this, please ignore this email.
+      Security Notice:
+      - Never share this code with anyone
+      - If you didn't request this code, please ignore this email
       
       Best regards,
-      The ${siteConfig.name} Team
+      The Notes App Team
     `;
 
-    // Send the email using the configured transporter
     const result = await transporter.sendMail({
-      from: provider.from,
+      from: process.env.EMAIL_FROM,
       to: email,
-      subject: `${otpCode} - Your ${siteConfig.name} verification code`,
+      subject: `${otpCode} - Your Notes App verification code`,
       text,
       html,
     });
 
-    console.log("✅ Verification email sent successfully:", result.messageId);
+    console.log("✅ OTP email sent successfully:", result.messageId);
+    return { success: true };
   } catch (error) {
-    console.log("❌ Failed to send verification email");
-    if (error instanceof Error) {
-      console.log("error.stack is ", error.stack);
-      console.log("error.message is ", error.message);
-    }
+    console.error("❌ Failed to send OTP email:", error);
     throw new Error("Failed to send verification email");
   }
 }
@@ -143,11 +119,7 @@ export async function verifyEmailConfig() {
     console.log("✅ Email server configuration is valid");
     return true;
   } catch (error) {
-    console.error("❌ Email server configuration error.");
-    if (error instanceof Error) {
-      console.log("error.stack is ", error.stack);
-      console.log("error.message is ", error.message);
-    }
+    console.error("❌ Email server configuration error:", error);
     return false;
   }
 }

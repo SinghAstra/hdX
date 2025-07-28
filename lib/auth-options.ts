@@ -1,31 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
-import EmailProvider from "next-auth/providers/email";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { sendVerificationRequest } from "./email";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   throw new Error("Google Credentials are required.");
-}
-
-const EMAIL_SERVER_HOST = process.env.EMAIL_SERVER_HOST;
-const EMAIL_SERVER_PORT = process.env.EMAIL_SERVER_PORT;
-const EMAIL_SERVER_USER = process.env.EMAIL_SERVER_USER;
-const EMAIL_SERVER_PASSWORD = process.env.EMAIL_SERVER_PASSWORD;
-const EMAIL_FROM = process.env.EMAIL_FROM;
-
-if (
-  !EMAIL_SERVER_HOST ||
-  !EMAIL_SERVER_PORT ||
-  !EMAIL_SERVER_USER ||
-  !EMAIL_SERVER_PASSWORD ||
-  !EMAIL_FROM
-) {
-  throw new Error("Email Credentials are required");
 }
 
 export const authOptions: NextAuthOptions = {
@@ -35,22 +18,68 @@ export const authOptions: NextAuthOptions = {
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
     }),
-    EmailProvider({
-      server: {
-        host: EMAIL_SERVER_HOST,
-        port: Number.parseInt(EMAIL_SERVER_PORT),
-        auth: {
-          user: EMAIL_SERVER_USER,
-          pass: EMAIL_SERVER_PASSWORD,
-        },
+    // Custom credentials provider for OTP-verified users
+    CredentialsProvider({
+      id: "otp-sign-in",
+      name: "OTP Sign In",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        tempToken: { label: "Temp Token", type: "text" },
       },
-      from: EMAIL_FROM,
-      sendVerificationRequest,
-      generateVerificationToken: () => {
-        return (
-          Math.random().toString(36).substring(2, 15) +
-          Math.random().toString(36).substring(2, 15)
-        );
+      async authorize(credentials) {
+        try {
+          if (!credentials?.email || !credentials?.tempToken) {
+            console.log("❌ Missing credentials for OTP sign-in");
+            return null;
+          }
+
+          console.log(`🔐 Authorizing OTP sign-in for: ${credentials.email}`);
+
+          const tokenRecord = await prisma.verificationToken.findFirst({
+            where: {
+              identifier: `temp-signin-${credentials.email}`,
+              token: credentials.tempToken,
+              expires: {
+                gt: new Date(),
+              },
+            },
+          });
+
+          if (!tokenRecord) {
+            console.log("❌ Invalid or expired temporary token");
+            return null;
+          }
+
+          // Get the user
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          });
+
+          if (!user) {
+            console.log("❌ User not found for OTP sign-in");
+            return null;
+          }
+
+          // Clean up the temporary token
+          await prisma.verificationToken.deleteMany({
+            where: {
+              identifier: tokenRecord.identifier,
+              token: tokenRecord.token,
+            },
+          });
+
+          console.log(`✅ OTP sign-in authorized for: ${user.email}`);
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        } catch (error) {
+          console.error("❌ OTP authorization error:", error);
+          return null;
+        }
       },
     }),
   ],
