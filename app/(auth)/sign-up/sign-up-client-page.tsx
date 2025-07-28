@@ -1,35 +1,39 @@
 "use client";
 
-import type React from "react";
-
-import { Loader } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useState } from "react";
-
+import { useToastContext } from "@/components/providers/toast";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
 import { SignUpFormData, signUpSchema } from "@/lib/validations/auth";
+import { Eye, EyeOff, Loader } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import type React from "react";
+import { useState } from "react";
 import * as yup from "yup";
 
 function SignUpClientPage() {
   const [formData, setFormData] = useState<SignUpFormData>({
     name: "",
-    dob: undefined, // Initialize as undefined
+    dob: undefined,
     email: "",
+    otp: "",
   });
   const [errors, setErrors] = useState<
     Partial<Record<keyof SignUpFormData, string>>
   >({});
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [isOTPSent, setIsOTPSent] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const { setToastMessage } = useToastContext();
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
 
-    // Validate on change using Yup
     try {
       await signUpSchema.validateAt(id, { [id]: value });
       setErrors((prev) => ({ ...prev, [id]: undefined }));
@@ -42,7 +46,6 @@ function SignUpClientPage() {
 
   const handleDateChange = async (date: Date | undefined) => {
     setFormData((prev) => ({ ...prev, dob: date }));
-    // Validate date on change using Yup
     try {
       await signUpSchema.validateAt("dob", { dob: date });
       setErrors((prev) => ({ ...prev, dob: undefined }));
@@ -53,13 +56,38 @@ function SignUpClientPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("handleSendOTP Called.");
     e.preventDefault();
     try {
-      await signUpSchema.validate(formData, { abortEarly: false }); // Validate all fields
-      setErrors({}); // Clear all errors on successful validation
-      console.log("Form data submitted:", formData);
-      // Here you would typically send the data to your backend
+      await yup
+        .object()
+        .shape({
+          email: signUpSchema.fields.email,
+        })
+        .validate({
+          email: formData.email,
+        });
+      setIsSendingOTP(true);
+      setErrors({});
+      const response = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.log("❌ Failed to send OTP:", data.message);
+        throw new Error(data.message || "Failed to send verification code");
+      }
+
+      setToastMessage("Please check your email for the OTP.");
+      setIsOTPSent(true);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         const newErrors: Partial<Record<keyof SignUpFormData, string>> = {};
@@ -70,6 +98,43 @@ function SignUpClientPage() {
         });
         setErrors(newErrors);
       }
+      if (error instanceof Error) {
+        console.log("error.stack is ", error.stack);
+        console.log("error.message is ", error.message);
+        setToastMessage(error.message);
+      }
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleSignUpWithOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await signUpSchema.validate(formData, { abortEarly: false });
+
+      setIsSigningUp(true);
+      setErrors({});
+      console.log("Attempting to sign up with OTP:", formData);
+
+      setToastMessage("Sign up successful! Redirecting...");
+    } catch (error) {
+      if (error instanceof yup.ValidationError) {
+        const newErrors: Partial<Record<keyof SignUpFormData, string>> = {};
+        error.inner.forEach((err) => {
+          if (err.path) {
+            newErrors[err.path as keyof SignUpFormData] = err.message;
+          }
+        });
+        setErrors(newErrors);
+      }
+      if (error instanceof Error) {
+        console.log("error.stack is ", error.stack);
+        console.log("error.message is ", error.message);
+        setToastMessage(error.message);
+      }
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
@@ -90,7 +155,10 @@ function SignUpClientPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <form
+          onSubmit={isOTPSent ? handleSignUpWithOTP : handleSendOTP}
+          className="space-y-4 w-full"
+        >
           <div className="space-y-2">
             <Label htmlFor="name">Your Name</Label>
             <Input
@@ -140,9 +208,65 @@ function SignUpClientPage() {
             )}
           </div>
 
-          <Button type="submit" className="w-full">
-            Get OTP
-          </Button>
+          {isOTPSent ? (
+            <>
+              <div className="space-y-2 mt-4">
+                <div className="relative">
+                  <Input
+                    id="otp"
+                    placeholder="OTP"
+                    value={formData.otp}
+                    onChange={handleChange}
+                    className={
+                      errors.otp ? "border-destructive pr-10" : "pr-10"
+                    }
+                    autoComplete="off"
+                    type={showOtp ? "text" : "password"}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowOtp((prev) => !prev)}
+                  >
+                    {showOtp ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className="sr-only">
+                      {showOtp ? "Hide OTP" : "Show OTP"}
+                    </span>
+                  </Button>
+                </div>
+                {errors.otp && (
+                  <p className="text-sm text-destructive text-right">
+                    {errors.otp}
+                  </p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={isSigningUp}>
+                {isSigningUp ? (
+                  <div className="flex items-center gap-2">
+                    <Loader className="w-3 h-3 animate-spin" /> Signing Up...
+                  </div>
+                ) : (
+                  "Sign Up"
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button type="submit" className="w-full" disabled={isSendingOTP}>
+              {isSendingOTP ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="w-3 h-3 animate-spin" /> Wait...
+                </div>
+              ) : (
+                "Get OTP"
+              )}
+            </Button>
+          )}
         </form>
 
         <div className="mt-4 text-center text-sm text-muted-foreground">

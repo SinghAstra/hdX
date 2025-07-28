@@ -64,10 +64,12 @@ export default function RootLayout({
               style: {
                 fontFamily: "Space Grotesk, monospace",
                 background: "hsl(var(--muted) / 0.2)",
+                backdropFilter: "blur(20px)",
                 color: "hsl(var(--foreground))",
                 border: "1px solid hsl(var(--border))",
                 letterSpacing: "0.05em",
                 fontSize: ".95rem",
+                borderRadius: "var(--radius)",
               },
             }}
           />
