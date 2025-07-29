@@ -29,17 +29,13 @@ function SignInClientPage() {
   const { setToastMessage } = useToastContext();
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
 
-    try {
-      await signInSchema.validateAt(id, { [id]: value });
+    // Clear error for this field when user starts editing
+    if (errors[id as keyof SignInFormData]) {
       setErrors((prev) => ({ ...prev, [id]: undefined }));
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setErrors((prev) => ({ ...prev, [id]: error.message }));
-      }
     }
   };
 
@@ -52,9 +48,12 @@ function SignInClientPage() {
         .shape({
           email: signInSchema.fields.email,
         })
-        .validate({
-          email: formData.email,
-        });
+        .validate(
+          {
+            email: formData.email,
+          },
+          { abortEarly: false }
+        );
       setIsSendingOTP(true);
       setErrors({});
       const response = await fetch("/api/auth/send-otp", {
@@ -77,16 +76,17 @@ function SignInClientPage() {
       setIsOTPSent(true);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
+        console.log("Inside yup Validation Error");
+        console.log("error.inner is ", error.inner);
         const newErrors: Partial<Record<keyof SignInFormData, string>> = {};
         error.inner.forEach((err) => {
+          console.log("err.path is ", err.path);
           if (err.path) {
             newErrors[err.path as keyof SignInFormData] = err.message;
           }
         });
-        console.log("newErrors is ", newErrors);
         setErrors(newErrors);
-      }
-      if (error instanceof Error) {
+      } else if (error instanceof Error) {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
         setToastMessage(error.message);
@@ -173,15 +173,17 @@ function SignInClientPage() {
       setToastMessage("Sign In successful! Redirecting...");
     } catch (error) {
       if (error instanceof yup.ValidationError) {
+        console.log("Inside yup Validation Error");
+        console.log("error.inner is ", error.inner);
         const newErrors: Partial<Record<keyof SignInFormData, string>> = {};
         error.inner.forEach((err) => {
+          console.log("err.path is ", err.path);
           if (err.path) {
             newErrors[err.path as keyof SignInFormData] = err.message;
           }
         });
         setErrors(newErrors);
-      }
-      if (error instanceof Error) {
+      } else if (error instanceof Error) {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
         setToastMessage(error.message);

@@ -4,7 +4,7 @@ import { useToastContext } from "@/components/providers/toast";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CreateNoteFormData, createNoteSchema } from "@/lib/validations/note";
-import { AlertCircle, Loader } from "lucide-react";
+import { Loader } from "lucide-react";
 import { Dispatch, FormEvent, SetStateAction, useState } from "react";
 import * as yup from "yup";
 import Dialog from "../ui/dialog";
@@ -31,19 +31,13 @@ function CreateNewNoteDialog({
   const { setToastMessage } = useToastContext();
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
 
-  const handleChange = async (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
 
-    try {
-      await createNoteSchema.validateAt(id, { [id]: value });
+    // Clear error for this field when user starts editing
+    if (errors[id as keyof CreateNoteFormData]) {
       setErrors((prev) => ({ ...prev, [id]: undefined }));
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setErrors((prev) => ({ ...prev, [id]: error.message }));
-      }
     }
   };
 
@@ -77,15 +71,17 @@ function CreateNewNoteDialog({
       setShowCreateNewNoteDialog(false);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
+        console.log("Inside yup Validation Error");
+        console.log("error.inner is ", error.inner);
         const newErrors: Partial<Record<keyof CreateNoteFormData, string>> = {};
         error.inner.forEach((err) => {
+          console.log("err.path is ", err.path);
           if (err.path) {
             newErrors[err.path as keyof CreateNoteFormData] = err.message;
           }
         });
         setErrors(newErrors);
-      }
-      if (error instanceof Error) {
+      } else if (error instanceof Error) {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
         setToastMessage(error.message);
@@ -128,9 +124,8 @@ function CreateNewNoteDialog({
               rows={6}
             />
             {errors.content && (
-              <p className="flex items-center gap-1 text-sm text-destructive text-right">
-                <AlertCircle className="h-4 w-4" />
-                <span>{errors.content}</span>
+              <p className="text-sm text-destructive text-right">
+                {errors.content}
               </p>
             )}
           </div>
