@@ -1,51 +1,54 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Star } from "lucide-react";
+"use client";
+
+import ConicBackground from "@/components/component-x/conic-background";
+import MovingBorder from "@/components/component-x/moving-border";
+import Footer from "@/components/home/footer";
+import Navbar from "@/components/home/navbar";
+import { blurInVariant, containerVariant } from "@/lib/variants";
+import { motion } from "framer-motion";
+import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
+import Hero from "./hero";
 
-function HomePage() {
+const HomePage = () => {
   return (
-    <div className="min-h-screen p-4 flex flex-col text-center items-center justify-center">
-      <div className="mb-8 flex items-center rounded px-4 py-2 text-sm font-medium border w-fit">
-        <Star className="mr-2 h-4 w-4" />
-        Trusted by thousands of users
-      </div>
+    <div>
+      <Navbar />
+      <Hero />
 
-      <h1 className="mb-6 text-4xl sm:text-6xl font-bold tracking-tight ">
-        Your thoughts deserve a{" "}
-        <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          beautiful home
-        </span>
-      </h1>
-
-      <p className="mb-10 text-xl sm:text-2xl text-muted-foreground ">
-        Capture ideas, organize thoughts, and boost productivity with our
-        elegant note-taking app.
-        <br /> Simple, secure, and always in sync.
-      </p>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-        <Link href="/sign-up">
-          <Button size="lg" className="w-full sm:w-auto">
-            Get Started Free
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </Link>
-        <Link href="/login">
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full sm:w-auto bg-transparent"
+      <div className="min-h-screen relative px-4 sm:px-8 flex items-center">
+        <motion.div
+          variants={containerVariant}
+          initial="hidden"
+          whileInView="visible"
+          className="flex flex-col gap-4 sm:gap-8 sm:max-w-[60%] text-balance"
+        >
+          <motion.h1
+            variants={blurInVariant}
+            className="text-5xl text-balance leading-[1.3]"
           >
-            Sign In
-          </Button>
-        </Link>
+            Start Organizing Your thoughts
+          </motion.h1>
+
+          <Link href="/sign-up">
+            <div className="p-[2px] relative z-[2] overflow-hidden rounded w-fit">
+              <MovingBorder />
+              <div className="relative border px-6 py-2 text-xl rounded flex items-center group cursor-pointer w-fit bg-muted">
+                Get started
+                <ArrowRightIcon
+                  className="ml-1 size-4 transition-all duration-300 
+                group-hover:translate-x-1"
+                />
+              </div>
+            </div>
+          </Link>
+        </motion.div>
+        <ConicBackground />
       </div>
 
-      <p className="mt-8 text-sm text-muted-foreground">
-        No credit card required • Free forever • 2-minute setup
-      </p>
+      <Footer />
     </div>
   );
-}
+};
 
 export default HomePage;
