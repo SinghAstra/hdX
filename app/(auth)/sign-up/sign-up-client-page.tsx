@@ -31,6 +31,7 @@ function SignUpClientPage() {
   const [showOtp, setShowOtp] = useState(false);
   const { setToastMessage } = useToastContext();
   const [isGoogleSigningUp, setIsGoogleSigningUp] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -397,12 +398,18 @@ function SignUpClientPage() {
       </div>
 
       <div className="hidden md:flex relative flex-1">
+        {!isImageLoaded && (
+          <div className="absolute inset-0 bg-muted/40 border-muted-foreground rounded-xl" />
+        )}
         <Image
           src="/assets/bg-auth.jpg"
           alt="Abstract blue waves"
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover rounded-r-xl"
+          onLoad={() => setIsImageLoaded(true)}
+          className={`object-cover transition-opacity duration-700 ${
+            isImageLoaded ? "opacity-100" : "opacity-0"
+          }`}
           priority
         />
       </div>
