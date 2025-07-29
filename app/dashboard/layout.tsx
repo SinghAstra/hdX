@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/dashboard/navbar";
+import { RightSidebar } from "@/components/dashboard/right-sidebar";
 import { authOptions } from "@/lib/auth-options";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -36,7 +37,7 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
       <div className="flex">
         {/* <LeftSidebar initialRepositories={repositories} /> */}
         <main className="hidden lg:flex flex-1 ml-96">{children}</main>
-        {/* <RightSidebar /> */}
+        <RightSidebar />
       </div>
     </div>
   );
