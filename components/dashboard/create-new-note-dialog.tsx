@@ -84,10 +84,11 @@ function CreateNewNoteDialog({
           }
         });
         setErrors(newErrors);
-      } else if (error instanceof Error) {
+      }
+      if (error instanceof Error) {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
-        setToastMessage(error.message || "Failed to create note");
+        setToastMessage(error.message);
       }
     } finally {
       setIsCreatingNewNote(false);
@@ -96,6 +97,8 @@ function CreateNewNoteDialog({
 
   const handleCancel = () => {
     setShowCreateNewNoteDialog(false);
+    setFormData({ content: "" });
+    setErrors({});
   };
 
   if (!showCreateNewNoteDialog) return;
@@ -125,10 +128,10 @@ function CreateNewNoteDialog({
               rows={6}
             />
             {errors.content && (
-              <div className="flex items-center gap-1 text-sm text-destructive text-right">
+              <p className="flex items-center gap-1 text-sm text-destructive text-right">
                 <AlertCircle className="h-4 w-4" />
                 <span>{errors.content}</span>
-              </div>
+              </p>
             )}
           </div>
 
@@ -154,8 +157,7 @@ function CreateNewNoteDialog({
               disabled={isCreatingNewNote}
               className={cn(
                 buttonVariants({
-                  className:
-                    "flex-1 rounded font-normal tracking-wider relative",
+                  className: "flex-1 rounded tracking-wider relative",
                 })
               )}
             >

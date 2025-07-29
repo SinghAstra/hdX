@@ -83,6 +83,7 @@ function SignInClientPage() {
             newErrors[err.path as keyof SignInFormData] = err.message;
           }
         });
+        console.log("newErrors is ", newErrors);
         setErrors(newErrors);
       }
       if (error instanceof Error) {
