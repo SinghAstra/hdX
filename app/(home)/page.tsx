@@ -4,7 +4,7 @@ import ConicBackground from "@/components/component-x/conic-background";
 import MovingBorder from "@/components/component-x/moving-border";
 import Footer from "@/components/home/footer";
 import Navbar from "@/components/home/navbar";
-import { blurInVariant, containerVariant } from "@/lib/variants";
+import { blurInVariant, containerVariant, fadeInVariant } from "@/lib/variants";
 import { motion } from "framer-motion";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
@@ -25,23 +25,25 @@ const HomePage = () => {
         >
           <motion.h1
             variants={blurInVariant}
-            className="text-5xl text-balance leading-[1.3]"
+            className=" text-3xl sm:text-4xl md:text-5xl text-balance leading-[1.3]"
           >
             Start Organizing Your thoughts
           </motion.h1>
 
-          <Link href="/sign-up">
-            <div className="p-[2px] relative z-[2] overflow-hidden rounded w-fit">
-              <MovingBorder />
-              <div className="relative border px-6 py-2 text-xl rounded flex items-center group cursor-pointer w-fit bg-muted">
-                Get started
-                <ArrowRightIcon
-                  className="ml-1 size-4 transition-all duration-300 
+          <motion.div variants={fadeInVariant}>
+            <Link href="/sign-up">
+              <div className="p-[2px] relative z-[2] overflow-hidden rounded w-fit">
+                <MovingBorder />
+                <div className="relative border px-6 py-2 sm:text-xl rounded flex items-center group cursor-pointer w-fit bg-muted">
+                  Get started
+                  <ArrowRightIcon
+                    className="ml-1 size-4 transition-all duration-300 
                 group-hover:translate-x-1"
-                />
+                  />
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </motion.div>
         </motion.div>
         <ConicBackground />
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { siteConfig } from "@/config/site";
-import { containerVariant, slideUpVariant } from "@/lib/variants";
+import { containerVariant, fadeInVariant } from "@/lib/variants";
 import { motion } from "framer-motion";
 import BorderHoverLink from "../component-x/border-hover-link";
 
@@ -12,8 +12,8 @@ const Footer = () => {
       initial="hidden"
       whileInView="visible"
     >
-      <footer className="flex sticky inset-x-0 bottom-0 p-4 items-center justify-between border-t border-border mx-4 sm:mx-8 ">
-        <motion.div variants={slideUpVariant}>
+      <footer className="flex flex-col sm:flex-row gap-4 sticky inset-x-0 bottom-0 p-4 items-center justify-between border-t border-border mx-4 sm:mx-8 ">
+        <motion.div variants={fadeInVariant}>
           <span className=" text-muted-foreground flex gap-2 items-center tracking-wider">
             Made by{" "}
             <BorderHoverLink
@@ -24,7 +24,7 @@ const Footer = () => {
             </BorderHoverLink>
           </span>
         </motion.div>
-        <motion.div variants={slideUpVariant}>
+        <motion.div variants={fadeInVariant}>
           <BorderHoverLink
             href={siteConfig.links.twitter}
             className="text-foreground tracking-wider"

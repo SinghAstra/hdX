@@ -25,6 +25,7 @@ const BorderHoverLink = ({
         className
       )}
       {...props}
+      target="_blank"
     >
       {children}
       <span
