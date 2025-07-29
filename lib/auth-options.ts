@@ -93,9 +93,61 @@ export const authOptions: NextAuthOptions = {
         });
 
         if (account?.provider === "google") {
+          // Check if user already exists (from OTP signup)
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+          });
+
+          if (existingUser) {
+            console.log(
+              "👤 User exists from OTP signup, linking Google account"
+            );
+
+            // Check if Google account is already linked
+            const existingAccount = await prisma.account.findFirst({
+              where: {
+                userId: existingUser.id,
+                provider: "google",
+              },
+            });
+
+            if (!existingAccount) {
+              // Link Google account to existing user
+              await prisma.account.create({
+                data: {
+                  userId: existingUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  id_token: account.id_token,
+                  refresh_token: account.refresh_token,
+                  scope: account.scope,
+                  session_state: account.session_state,
+                  token_type: account.token_type,
+                },
+              });
+
+              // Update user with Google profile info if missing
+              await prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                  image: existingUser.image || user.image,
+                  name: existingUser.name || user.name,
+                },
+              });
+
+              console.log("✅ Google account linked to existing user");
+            }
+
+            // Set the user ID for the session
+            user.id = existingUser.id;
+          }
+
           console.log("✅ Google sign-in successful for:", user.email);
-        } else if (account?.provider === "email") {
-          console.log("✅ Email verification successful for:", user.email);
+        } else if (account?.provider === "otp-sign-in") {
+          console.log("✅ OTP sign-in successful for:", user.email);
         }
 
         return true;

@@ -3,26 +3,40 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, token } = await request.json();
+    const { email, otp, name, dob } = await request.json();
 
-    console.log(`🔍 Verifying OTP: ${token} for email: ${email}`);
-
-    if (!email || !token) {
+    if (!email || !otp) {
       return NextResponse.json(
         { message: "Email and token are required" },
         { status: 400 }
       );
     }
 
+    console.log("email is ", email);
+    console.log("otp is ", otp);
+
     const otpRecord = await prisma.verificationToken.findFirst({
       where: {
         identifier: email,
-        token: token.toUpperCase(),
+        token: otp.toUpperCase(),
         expires: {
           gt: new Date(),
         },
       },
     });
+
+    const allVerificationTokenRecords = await prisma.verificationToken.findMany(
+      {
+        where: {
+          identifier: email,
+        },
+      }
+    );
+
+    console.log(
+      "allVerificationTokenRecords are ",
+      allVerificationTokenRecords
+    );
 
     if (!otpRecord) {
       console.log("❌ Invalid or expired OTP code");
@@ -35,12 +49,12 @@ export async function POST(request: NextRequest) {
     console.log("✅ OTP verification successful");
 
     // Delete the used OTP token
-    // await prisma.verificationToken.delete({
-    //   where: {
-    //     identifier: otpRecord.identifier,
-    //     token: otpRecord.token,
-    //   },
-    // });
+    await prisma.verificationToken.deleteMany({
+      where: {
+        identifier: otpRecord.identifier,
+        token: otpRecord.token,
+      },
+    });
 
     // Check if user exists, if not create them
     let user = await prisma.user.findUnique({
@@ -52,6 +66,8 @@ export async function POST(request: NextRequest) {
       user = await prisma.user.create({
         data: {
           email,
+          dob: dob,
+          name: name,
           emailVerified: new Date(),
         },
       });
@@ -75,7 +91,7 @@ export async function POST(request: NextRequest) {
       console.log("error.message is ", error.message);
     }
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: "Internal server error" },
       { status: 500 }
     );
   }

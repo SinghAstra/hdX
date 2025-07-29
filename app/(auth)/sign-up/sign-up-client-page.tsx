@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
 import { SignUpFormData, signUpSchema } from "@/lib/validations/auth";
 import { Eye, EyeOff, Loader } from "lucide-react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import type React from "react";
@@ -29,6 +30,7 @@ function SignUpClientPage() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const { setToastMessage } = useToastContext();
+  const [isGoogleSigningUp, setIsGoogleSigningUp] = useState(false);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -117,6 +119,73 @@ function SignUpClientPage() {
       setErrors({});
       console.log("Attempting to sign up with OTP:", formData);
 
+      // Step 1: Verify the OTP
+      const verifyOTPResponse = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          otp: formData.otp,
+          name: formData.name,
+          dob: formData.dob,
+        }),
+      });
+
+      const verifyOTPData = await verifyOTPResponse.json();
+
+      if (!verifyOTPResponse.ok) {
+        console.log("❌ OTP verification failed:", verifyOTPData.message);
+        setToastMessage(verifyOTPData.message || "Invalid verification code");
+        return;
+      }
+
+      console.log("✅ OTP verified successfully");
+
+      // Step 2: Prepare NextAuth session
+      const generateSessionResponse = await fetch(
+        "/api/auth/sign-in-with-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            userId: verifyOTPData.userId,
+          }),
+        }
+      );
+
+      const generateSessionData = await generateSessionResponse.json();
+
+      if (!generateSessionResponse.ok) {
+        console.log(
+          "❌ Session preparation failed:",
+          generateSessionData.message
+        );
+        setToastMessage(
+          generateSessionData.message || "Sign-in failed. Please try again."
+        );
+        return;
+      }
+
+      console.log("✅ Session prepared, signing in with NextAuth");
+
+      // Step 3: Sign in using NextAuth credentials provider
+      const signInResult = await signIn("otp-sign-in", {
+        email: formData.email,
+        tempToken: generateSessionData.tempToken,
+        callbackUrl: "/dashboard",
+        redirect: true,
+      });
+
+      if (signInResult?.error) {
+        console.error("❌ NextAuth sign-in failed:", signInResult.error);
+        setToastMessage("Sign-in failed. Please try again.");
+      }
+
       setToastMessage("Sign up successful! Redirecting...");
     } catch (error) {
       if (error instanceof yup.ValidationError) {
@@ -135,6 +204,26 @@ function SignUpClientPage() {
       }
     } finally {
       setIsSigningUp(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleSigningUp(true);
+      setErrors({});
+
+      await signIn("google", {
+        callbackUrl: "/dashboard",
+        redirect: true,
+      });
+    } catch (error) {
+      console.log("❌ Google sign-in error.");
+      if (error instanceof Error) {
+        console.log("error.stack is ", error.stack);
+        console.log("error.message is ", error.message);
+      }
+      setToastMessage("Google sign-in failed. Please try again.");
+      setIsGoogleSigningUp(false);
     }
   };
 
@@ -268,6 +357,32 @@ function SignUpClientPage() {
             </Button>
           )}
         </form>
+
+        <Button
+          className="w-full rounded tracking-wide relative"
+          onClick={handleGoogleSignIn}
+          disabled={isGoogleSigningUp}
+        >
+          {isGoogleSigningUp ? (
+            <>
+              <Loader className="w-5 h-5 animate-spin" />
+              Wait ...
+            </>
+          ) : (
+            <>
+              <Image
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google"
+                width={18}
+                height={18}
+                className="mr-2"
+              />
+              <span className="text-center tracking-wide">
+                Continue with Google
+              </span>
+            </>
+          )}
+        </Button>
 
         <div className="mt-4 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
