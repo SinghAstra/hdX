@@ -29,7 +29,7 @@ function Hero() {
               variant="outline"
               className="rounded group relative font-normal bg-transparent hover:bg-muted/40"
             >
-              <MovingBackground shineColor="hsl(var(--primary)/20)" />
+              <MovingBackground shineColor="hsl(var(--muted)/20)" />
               <span className=" text-sm text-foreground flex items-center justify-center gap-2">
                 <FaTwitter className="size-3" /> Follow For Updates
                 <ArrowRightIcon className="size-3 transform-all duration-300 group-hover:translate-x-1" />
@@ -43,24 +43,19 @@ function Hero() {
         variants={blurInVariant}
         className=" font-medium text-5xl tracking-tight md:text-6xl lg:text-7xl my-2 sm:my-4 "
       >
-        {siteConfig.name}
+        Your thoughts deserve a
+        <br />
+        <span className="text-orange-500 font-medium mx-2">
+          beautiful home.
+        </span>
       </motion.h1>
-
-      <motion.div variants={blurInVariant}>
-        <p className=" md:text-lg lg:text-xl text-foreground/80 text-balance max-w-2xl">
-          Your thoughts deserve a
-          <span className="text-primary/70 font-medium mx-2">
-            beautiful home.
-          </span>
-        </p>
-      </motion.div>
 
       <div className="flex flex-col sm:flex-row gap-4 sm:mt-4 items-center ">
         <Link href="/sign-up">
           <motion.div variants={scaleInVariant} className="p-1">
             <Button
               size="lg"
-              className="group rounded relative flex items-center gap-1 text-md font-normal backdrop-blur-md  "
+              className="group rounded relative flex items-center gap-1 text-md backdrop-blur-md  "
             >
               Get Started For Free
               <ArrowRight className="ml-2 h-4 w-4 transition-all duration-200 group-hover:translate-x-1" />

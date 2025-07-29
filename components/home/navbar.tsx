@@ -30,9 +30,9 @@ const Navbar = () => {
 
   return (
     <div
-      className={`flex items-center justify-between px-6 py-3 fixed top-0  inset-x-0 sm:inset-x-24 lg:inset-x-32 backdrop-blur-md z-[10]
+      className={`flex items-center justify-between px-6 py-3 fixed top-0 inset-x-0 sm:inset-x-24 lg:inset-x-32 backdrop-blur-md z-[10]
         transition-all duration-300
-        rounded border bg-background/40
+        rounded sm:border bg-background/40
         ${scrolled ? "shadow-2xl sm:top-2" : "sm:top-6"}
       `}
     >
@@ -52,7 +52,7 @@ const Navbar = () => {
               buttonVariants({
                 variant: "ghost",
               }),
-              "rounded cursor-pointer"
+              "hidden sm:inline rounded cursor-pointer"
             )}
           >
             Sign In
