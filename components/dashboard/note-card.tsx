@@ -1,6 +1,5 @@
 "use client";
 
-import { useToastContext } from "@/components/providers/toast";
 import { cn } from "@/lib/utils";
 import type { Note } from "@prisma/client";
 import { Loader, Trash2 } from "lucide-react";
@@ -8,44 +7,17 @@ import { useState } from "react";
 
 interface NoteCardProps {
   note: Note;
-  onNoteDeleted?: (noteId: string) => void;
+  onDeleteNote: (noteId: string) => Promise<void>;
 }
 
-const NoteCard = ({ note, onNoteDeleted }: NoteCardProps) => {
+const NoteCard = ({ note, onDeleteNote }: NoteCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const { setToastMessage } = useToastContext();
 
   const handleDeleteNote = async () => {
-    try {
-      setIsDeleting(true);
-
-      const response = await fetch(`/api/notes/${note.id}`, {
-        method: "DELETE",
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete note");
-      }
-
-      setToastMessage("Note deleted successfully!");
-
-      if (onNoteDeleted) {
-        onNoteDeleted(note.id);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        console.log("error.stack is ", error.stack);
-        console.log("error.message is ", error.message);
-        setToastMessage(error.message);
-      } else {
-        setToastMessage("An unexpected error occurred");
-      }
-    } finally {
-      setIsDeleting(false);
-    }
+    setIsDeleting(true);
+    await onDeleteNote(note.id);
+    setIsDeleting(false);
   };
 
   return (

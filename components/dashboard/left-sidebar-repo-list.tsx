@@ -7,9 +7,10 @@ import NoteCard from "./note-card";
 
 interface SidebarRepoListProps {
   notes: Note[];
+  onDeleteNote: (noteId: string) => Promise<void>;
 }
 
-const SidebarRepoList = ({ notes }: SidebarRepoListProps) => {
+const SidebarRepoList = ({ notes, onDeleteNote }: SidebarRepoListProps) => {
   if (notes.length === 0) {
     return <EmptyNotesSidebarRepoList />;
   }
@@ -17,7 +18,9 @@ const SidebarRepoList = ({ notes }: SidebarRepoListProps) => {
     <div className="h-full overflow-y-auto px-4 ">
       <div className="flex flex-col gap-4 ">
         {notes.map((note) => {
-          return <NoteCard key={note.id} note={note} />;
+          return (
+            <NoteCard key={note.id} note={note} onDeleteNote={onDeleteNote} />
+          );
         })}
       </div>
     </div>
