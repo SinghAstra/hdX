@@ -1,9 +1,11 @@
+import { LeftSidebar } from "@/components/dashboard/left-sidebar";
 import { Navbar } from "@/components/dashboard/navbar";
 import { RightSidebar } from "@/components/dashboard/right-sidebar";
 import { authOptions } from "@/lib/auth-options";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { ReactNode } from "react";
+import { fetchAllNotes } from "./actions";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -29,13 +31,13 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
     redirect("/sign-in");
   }
 
-  //   const { repositories } = await fetchRepositories();
+  const { notes } = await fetchAllNotes();
 
   return (
     <div className="min-h-screen">
       <Navbar user={session.user} />
       <div className="flex">
-        {/* <LeftSidebar initialRepositories={repositories} /> */}
+        <LeftSidebar initialNotes={notes} />
         <main className="hidden lg:flex flex-1 ml-96">{children}</main>
         <RightSidebar />
       </div>

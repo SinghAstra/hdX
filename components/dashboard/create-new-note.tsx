@@ -83,7 +83,7 @@ function CreateNewNote() {
   return (
     <form
       onSubmit={handleCreateNewNote}
-      className="p-2 border rounded space-y-2 w-full max-w-xl mx-auto"
+      className="p-2 mt-2 border rounded space-y-2 w-full max-w-xl mx-auto"
     >
       <div className="space-y-2">
         <Textarea

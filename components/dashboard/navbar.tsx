@@ -24,7 +24,7 @@ export function Navbar({ user }: NavbarProps) {
         variants={containerVariant}
         initial="hidden"
         whileInView="visible"
-        className="sticky top-0 inset-x-0 shadow-md flex items-center justify-between  p-4 sm:px-8 bg-background"
+        className="sticky z-[2] border-b top-0 inset-x-0 shadow-md flex items-center justify-between  p-4 sm:px-8 bg-background"
       >
         <Link href="/dashboard">
           <span className="text-xl tracking-wider">{siteConfig.name}</span>
