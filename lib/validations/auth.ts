@@ -22,3 +22,19 @@ export type SignUpFormData = {
   email: string;
   otp: string;
 };
+
+export const signInSchema = yup.object({
+  email: yup
+    .string()
+    .email("Invalid email address")
+    .required("Email is required"),
+  otp: yup
+    .string()
+    .required("OTP is required")
+    .length(6, "OTP must be 6 digits"),
+});
+
+export type SignInFormData = {
+  email: string;
+  otp: string;
+};

@@ -2,11 +2,10 @@
 
 import { useToastContext } from "@/components/providers/toast";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
-import { SignUpFormData, signUpSchema } from "@/lib/validations/auth";
+import { SignInFormData, signInSchema } from "@/lib/validations/auth";
 import { Eye, EyeOff, Loader } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
@@ -15,45 +14,31 @@ import type React from "react";
 import { useState } from "react";
 import * as yup from "yup";
 
-function SignUpClientPage() {
-  const [formData, setFormData] = useState<SignUpFormData>({
-    name: "",
-    dob: undefined,
+function SignInClientPage() {
+  const [formData, setFormData] = useState<SignInFormData>({
     email: "",
     otp: "",
   });
   const [errors, setErrors] = useState<
-    Partial<Record<keyof SignUpFormData, string>>
+    Partial<Record<keyof SignInFormData, string>>
   >({});
   const [isSendingOTP, setIsSendingOTP] = useState(false);
   const [isOTPSent, setIsOTPSent] = useState(false);
-  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const { setToastMessage } = useToastContext();
-  const [isGoogleSigningUp, setIsGoogleSigningUp] = useState(false);
+  const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
 
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
 
     try {
-      await signUpSchema.validateAt(id, { [id]: value });
+      await signInSchema.validateAt(id, { [id]: value });
       setErrors((prev) => ({ ...prev, [id]: undefined }));
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         setErrors((prev) => ({ ...prev, [id]: error.message }));
-      }
-    }
-  };
-
-  const handleDateChange = async (date: Date | undefined) => {
-    setFormData((prev) => ({ ...prev, dob: date }));
-    try {
-      await signUpSchema.validateAt("dob", { dob: date });
-      setErrors((prev) => ({ ...prev, dob: undefined }));
-    } catch (error) {
-      if (error instanceof yup.ValidationError) {
-        setErrors((prev) => ({ ...prev, dob: error.message }));
       }
     }
   };
@@ -65,7 +50,7 @@ function SignUpClientPage() {
       await yup
         .object()
         .shape({
-          email: signUpSchema.fields.email,
+          email: signInSchema.fields.email,
         })
         .validate({
           email: formData.email,
@@ -92,10 +77,10 @@ function SignUpClientPage() {
       setIsOTPSent(true);
     } catch (error) {
       if (error instanceof yup.ValidationError) {
-        const newErrors: Partial<Record<keyof SignUpFormData, string>> = {};
+        const newErrors: Partial<Record<keyof SignInFormData, string>> = {};
         error.inner.forEach((err) => {
           if (err.path) {
-            newErrors[err.path as keyof SignUpFormData] = err.message;
+            newErrors[err.path as keyof SignInFormData] = err.message;
           }
         });
         setErrors(newErrors);
@@ -110,14 +95,14 @@ function SignUpClientPage() {
     }
   };
 
-  const handleSignUpWithOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignInWithOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await signUpSchema.validate(formData, { abortEarly: false });
+      await signInSchema.validate(formData, { abortEarly: false });
 
-      setIsSigningUp(true);
+      setIsSigningIn(true);
       setErrors({});
-      console.log("Attempting to sign up with OTP:", formData);
+      console.log("Attempting to sign in with OTP:", formData);
 
       // Step 1: Verify the OTP
       const verifyOTPResponse = await fetch("/api/auth/verify-otp", {
@@ -128,8 +113,6 @@ function SignUpClientPage() {
         body: JSON.stringify({
           email: formData.email,
           otp: formData.otp,
-          name: formData.name,
-          dob: formData.dob,
         }),
       });
 
@@ -186,13 +169,13 @@ function SignUpClientPage() {
         setToastMessage("Sign-in failed. Please try again.");
       }
 
-      setToastMessage("Sign up successful! Redirecting...");
+      setToastMessage("Sign In successful! Redirecting...");
     } catch (error) {
       if (error instanceof yup.ValidationError) {
-        const newErrors: Partial<Record<keyof SignUpFormData, string>> = {};
+        const newErrors: Partial<Record<keyof SignInFormData, string>> = {};
         error.inner.forEach((err) => {
           if (err.path) {
-            newErrors[err.path as keyof SignUpFormData] = err.message;
+            newErrors[err.path as keyof SignInFormData] = err.message;
           }
         });
         setErrors(newErrors);
@@ -203,13 +186,13 @@ function SignUpClientPage() {
         setToastMessage(error.message);
       }
     } finally {
-      setIsSigningUp(false);
+      setIsSigningIn(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      setIsGoogleSigningUp(true);
+      setIsGoogleSigningIn(true);
       setErrors({});
 
       await signIn("google", {
@@ -223,7 +206,7 @@ function SignUpClientPage() {
         console.log("error.message is ", error.message);
       }
       setToastMessage("Google sign-in failed. Please try again.");
-      setIsGoogleSigningUp(false);
+      setIsGoogleSigningIn(false);
     }
   };
 
@@ -238,50 +221,18 @@ function SignUpClientPage() {
             </span>
           </div>
         </Link>
-
         <div className="max-w-xl w-full space-y-6 flex flex-col ">
           <div className="space-y-2 w-full">
-            <h1 className="text-3xl font-bold text-foreground">Sign up</h1>
+            <h1 className="text-3xl font-bold text-foreground">Sign In</h1>
             <p className="text-muted-foreground">
-              Sign up to enjoy the feature of {siteConfig.name}
+              Please login to continue your account.
             </p>
           </div>
 
           <form
-            onSubmit={isOTPSent ? handleSignUpWithOTP : handleSendOTP}
+            onSubmit={isOTPSent ? handleSignInWithOTP : handleSendOTP}
             className="space-y-4 w-full"
           >
-            <div className="space-y-2">
-              <Label htmlFor="name">Your Name</Label>
-              <Input
-                id="name"
-                placeholder="Jonas Khanwald"
-                value={formData.name}
-                onChange={handleChange}
-                className={errors.name ? "border-destructive" : ""}
-                autoComplete="off"
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive text-right">
-                  {errors.name}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dob">Date of Birth</Label>
-              <DatePicker
-                selectedDate={formData.dob}
-                onDateChange={handleDateChange}
-                error={errors.dob}
-              />
-              {errors.dob && (
-                <p className="text-sm text-destructive text-right">
-                  {errors.dob}
-                </p>
-              )}
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -338,13 +289,13 @@ function SignUpClientPage() {
                     </p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={isSigningUp}>
-                  {isSigningUp ? (
+                <Button type="submit" className="w-full" disabled={isSigningIn}>
+                  {isSigningIn ? (
                     <div className="flex items-center gap-2">
-                      <Loader className="w-3 h-3 animate-spin" /> Signing Up...
+                      <Loader className="w-3 h-3 animate-spin" /> Signing In...
                     </div>
                   ) : (
-                    "Sign Up"
+                    "Sign In"
                   )}
                 </Button>
               </>
@@ -364,9 +315,9 @@ function SignUpClientPage() {
           <Button
             className="w-full rounded tracking-wide relative"
             onClick={handleGoogleSignIn}
-            disabled={isGoogleSigningUp}
+            disabled={isGoogleSigningIn}
           >
-            {isGoogleSigningUp ? (
+            {isGoogleSigningIn ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
                 Wait ...
@@ -388,9 +339,9 @@ function SignUpClientPage() {
           </Button>
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/sign-in" className="underline text-primary">
-              Sign In
+            Need an account?{" "}
+            <Link href="/sign-up" className="underline text-primary">
+              Create One
             </Link>
           </div>
         </div>
@@ -410,4 +361,4 @@ function SignUpClientPage() {
   );
 }
 
-export default SignUpClientPage;
+export default SignInClientPage;
