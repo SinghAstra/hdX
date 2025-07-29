@@ -12,7 +12,7 @@ export async function generateMetadata() {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/");
+    redirect("/sign-in");
   }
 
   return {
@@ -25,7 +25,7 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/");
+    redirect("/sign-in");
   }
 
   //   const { repositories } = await fetchRepositories();
@@ -35,7 +35,7 @@ const DashboardLayout = async ({ children }: DashboardLayoutProps) => {
       <Navbar user={session.user} />
       <div className="flex">
         {/* <LeftSidebar initialRepositories={repositories} /> */}
-        <main className="hidden lg:flex flex-1 ml-96 ">{children}</main>
+        <main className="hidden lg:flex flex-1 ml-96">{children}</main>
         {/* <RightSidebar /> */}
       </div>
     </div>
