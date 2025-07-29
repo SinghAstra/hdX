@@ -21,7 +21,28 @@ const NoteCard = ({ note, onDeleteNote }: NoteCardProps) => {
   };
 
   if (note.isSkeleton) {
-    return <span>Skeleton</span>;
+    return (
+      <div
+        className={cn(
+          "group relative px-3 py-2 rounded border transition-all duration-200",
+          "bg-card text-card-foreground "
+        )}
+      >
+        <div className="pr-8">
+          <div className="h-4 w-3/4 rounded bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-1/2 rounded bg-muted-foreground/20 mt-2 animate-pulse" />
+          <div className="mt-2 h-3 w-1/4 rounded bg-muted-foreground/20 animate-pulse" />
+        </div>
+        <div
+          className={cn(
+            "absolute top-2 right-2 transition-all duration-200",
+            "opacity-0 group-hover:opacity-100"
+          )}
+        >
+          <div className="h-7 w-7 rounded-md bg-muted-foreground/20" />
+        </div>
+      </div>
+    );
   }
 
   return (
