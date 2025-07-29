@@ -17,7 +17,7 @@ export async function GET() {
       );
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
       where: { id: session.user.id },
     });
 
@@ -30,7 +30,7 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ notes });
+    return NextResponse.json(notes);
   } catch (error) {
     if (error instanceof Error) {
       console.log("error.stack is", error.stack);

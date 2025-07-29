@@ -1,12 +1,12 @@
 "use client";
 
+import { NoteWithSkeleton } from "@/lib/interfaces/note";
 import { cn } from "@/lib/utils";
-import type { Note } from "@prisma/client";
 import { Loader, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 interface NoteCardProps {
-  note: Note;
+  note: NoteWithSkeleton;
   onDeleteNote: (noteId: string) => Promise<void>;
 }
 
@@ -19,6 +19,10 @@ const NoteCard = ({ note, onDeleteNote }: NoteCardProps) => {
     await onDeleteNote(note.id);
     setIsDeleting(false);
   };
+
+  if (note.isSkeleton) {
+    return <span>Skeleton</span>;
+  }
 
   return (
     <div

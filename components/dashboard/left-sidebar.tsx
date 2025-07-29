@@ -1,6 +1,7 @@
 "use client";
 
 import { fetchAllNotes } from "@/lib/api";
+import { NoteWithSkeleton } from "@/lib/interfaces/note";
 import { Note } from "@prisma/client";
 import useSWR from "swr";
 import { useToastContext } from "../providers/toast";
@@ -12,16 +13,18 @@ interface LeftSidebarProps {
 
 export function LeftSidebar({ initialNotes }: LeftSidebarProps) {
   const { setToastMessage } = useToastContext();
-  const { data: notes, mutate: mutateNotes } = useSWR<Note[]>(fetchAllNotes, {
-    fallbackData: initialNotes,
-  });
+  const { data: notes, mutate: mutateNotes } = useSWR<NoteWithSkeleton[]>(
+    fetchAllNotes,
+    {
+      fallbackData: initialNotes,
+    }
+  );
 
   const handleDeleteNote = async (noteId: string) => {
     try {
       const updatedNotes = notes?.filter((note) => note.id !== noteId) || [];
       mutateNotes(updatedNotes, false);
 
-      // Make the API call
       const response = await fetch(`/api/notes/${noteId}`, {
         method: "DELETE",
       });

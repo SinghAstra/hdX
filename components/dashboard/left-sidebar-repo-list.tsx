@@ -1,12 +1,12 @@
 "use client";
 
-import { Note } from "@prisma/client";
+import { NoteWithSkeleton } from "@/lib/interfaces/note";
 import React from "react";
 import EmptyNotesSidebarRepoList from "./empty-notes-sidebar-repo-list";
 import NoteCard from "./note-card";
 
 interface SidebarRepoListProps {
-  notes: Note[];
+  notes: NoteWithSkeleton[];
   onDeleteNote: (noteId: string) => Promise<void>;
 }
 

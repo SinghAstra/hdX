@@ -2,10 +2,13 @@
 
 import { useToastContext } from "@/components/providers/toast";
 import { buttonVariants } from "@/components/ui/button";
+import { fetchAllNotes } from "@/lib/api";
+import { NoteWithSkeleton } from "@/lib/interfaces/note";
 import { cn } from "@/lib/utils";
 import { CreateNoteFormData, createNoteSchema } from "@/lib/validations/note";
 import { Loader } from "lucide-react";
 import { FormEvent, useState } from "react";
+import useSWR from "swr";
 import * as yup from "yup";
 import { Textarea } from "../ui/textarea";
 
@@ -20,6 +23,7 @@ function CreateNewNote() {
 
   const { setToastMessage } = useToastContext();
   const [isCreatingNewNote, setIsCreatingNewNote] = useState(false);
+  const { mutate: mutateNotes } = useSWR<NoteWithSkeleton[]>(fetchAllNotes);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -32,6 +36,8 @@ function CreateNewNote() {
   };
 
   const handleCreateNewNote = async (e: FormEvent) => {
+    let tempNoteId: string | null = null;
+
     try {
       e.preventDefault();
 
@@ -40,6 +46,18 @@ function CreateNewNote() {
 
       setIsCreatingNewNote(true);
       setErrors({});
+      tempNoteId = `temp-${Date.now()}`;
+
+      const newNote: NoteWithSkeleton = {
+        id: tempNoteId,
+        content: formData.content,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: "",
+        isSkeleton: true,
+      };
+
+      mutateNotes((currentNotes) => [newNote, ...(currentNotes || [])], false);
 
       const response = await fetch("/api/notes", {
         method: "POST",
@@ -58,6 +76,7 @@ function CreateNewNote() {
 
       // Reset form
       setFormData({ content: "" });
+      mutateNotes();
     } catch (error) {
       if (error instanceof yup.ValidationError) {
         console.log("Inside yup Validation Error");
@@ -74,6 +93,15 @@ function CreateNewNote() {
         console.log("error.stack is ", error.stack);
         console.log("error.message is ", error.message);
         setToastMessage(error.message);
+      }
+      if (tempNoteId) {
+        mutateNotes(
+          (currentNotes) =>
+            currentNotes
+              ? currentNotes.filter((note) => note.id !== tempNoteId)
+              : [],
+          false
+        );
       }
     } finally {
       setIsCreatingNewNote(false);
