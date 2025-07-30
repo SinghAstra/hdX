@@ -98,6 +98,8 @@ export const authOptions: NextAuthOptions = {
             where: { email: user.email! },
           });
 
+          console.log("existingUser is ", existingUser);
+
           if (existingUser) {
             console.log(
               "👤 User exists from OTP signup, linking Google account"

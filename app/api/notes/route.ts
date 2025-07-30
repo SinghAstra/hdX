@@ -8,7 +8,7 @@ import * as yup from "yup";
 
 export async function GET() {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
 
     if (!session) {
       return NextResponse.json(
@@ -21,6 +21,8 @@ export async function GET() {
       where: { id: session.user.id },
     });
 
+    console.log("user api route is ", user);
+
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -29,6 +31,8 @@ export async function GET() {
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
+
+    console.log("notes api route is ", notes);
 
     return NextResponse.json(notes);
   } catch (error) {

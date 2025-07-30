@@ -11,6 +11,8 @@ export async function fetchAllNotes() {
       return { message: "Authentication required", notes: [] };
     }
 
+    console.log("userId in server action is ", session.user.id);
+
     const notes = await prisma.note.findMany({
       where: {
         userId: session.user.id,
@@ -19,6 +21,8 @@ export async function fetchAllNotes() {
         createdAt: "desc",
       },
     });
+
+    console.log("notes in server action is ", notes);
     return { notes };
   } catch (error) {
     if (error instanceof Error) {
