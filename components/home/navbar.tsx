@@ -8,6 +8,7 @@ import { ZapIcon } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { buttonVariants } from "../ui/button";
+import { ThemeToggle } from "./theme-toggle";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -45,6 +46,7 @@ const Navbar = () => {
         whileInView="visible"
         className="flex items-center gap-x-4"
       >
+        <ThemeToggle />
         <Link href="/sign-in">
           <motion.div
             variants={scaleInVariant}

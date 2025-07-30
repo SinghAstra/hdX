@@ -2,6 +2,7 @@
 
 import { useToastContext } from "@/components/providers/toast";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { siteConfig } from "@/config/site";
@@ -29,6 +30,7 @@ function SignInClientPage() {
   const { setToastMessage } = useToastContext();
   const [isGoogleSigningIn, setIsGoogleSigningIn] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -40,9 +42,7 @@ function SignInClientPage() {
     }
   };
 
-  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("handleSendOTP Called.");
-    e.preventDefault();
+  const sendOTP = async () => {
     try {
       await yup
         .object()
@@ -95,6 +95,12 @@ function SignInClientPage() {
     } finally {
       setIsSendingOTP(false);
     }
+  };
+
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("handleSendOTP Called.");
+    e.preventDefault();
+    sendOTP();
   };
 
   const handleSignInWithOTP = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -292,6 +298,33 @@ function SignInClientPage() {
                       {errors.otp}
                     </p>
                   )}
+                </div>
+                <div className="flex flex-col gap-4 mt-2 items-start">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 h-auto text-primary"
+                    onClick={sendOTP}
+                    disabled={isSendingOTP}
+                  >
+                    {isSendingOTP ? (
+                      <div className="flex items-center gap-1">
+                        <Loader className="w-3 h-3 animate-spin" /> Resending...
+                      </div>
+                    ) : (
+                      "Resend OTP"
+                    )}
+                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="keep-logged-in"
+                      checked={keepLoggedIn}
+                      onCheckedChange={(setChecked) =>
+                        setKeepLoggedIn(!!setChecked)
+                      }
+                    />
+                    <Label htmlFor="keep-logged-in">Keep me logged in</Label>
+                  </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={isSigningIn}>
                   {isSigningIn ? (
